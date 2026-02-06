@@ -2,6 +2,7 @@
 
 Good file structure
 
+```
 app/
 ├── backend/                      # 🦀 Rust Backend
 │   ├── src/
@@ -93,4 +94,4 @@ app/
 ├── tsconfig.json                 # TypeScript config
 ├── vite.config.ts                # Vite configuration
 └── README.md
-
+```
