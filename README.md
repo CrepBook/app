@@ -1,6 +1,10 @@
-# app
+# Client APP
 
-Good file structure
+## Contributing
+See our guidelines: https://github.com/CrepBook/.github/blob/main/CONTRIBUTING.md
+
+
+## Good file structure
 
 ```
 app/
