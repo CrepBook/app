@@ -1,20 +1,18 @@
 import {useState} from "react";
-import FileNameInput from "../../../features/file-name-input/ui/FileNameInput.tsx"; // поправь пути под свой проект
-import FileContentEditor from "../../../features/file-content-editor/ui/FileContentEditor.tsx";
+import FileContentEditor from "@/shared/ui/FileContentEditor"; // поправь путь
+import {MarkdownPreview} from "@/shared/ui/MarkdownPreview";
+import {ModeToggle} from "@/shared/ui/ModeToggle";
+
+type Mode = "edit" | "preview";
 
 type FileEditorProps = {
-    initialFileName?: string;
-    initialText?: string;
+    value: string;
+    onChange: (value: string) => void;
+    initialMode?: Mode;
 };
 
-export default function FileEditor(
-    {
-        initialFileName = "Untitled",
-        initialText = "(Х)ороший (У)мный (Й)огурт",
-    }: FileEditorProps
-) {
-    const [fileName] = useState(initialFileName);
-    const [text, setText] = useState(initialText);
+export function FileEditor({value, onChange, initialMode = "edit"}: FileEditorProps) {
+    const [mode, setMode] = useState<Mode>(initialMode);
 
     return (
         <div style={{height: "100dvh", display: "flex", flexDirection: "column"}}>
@@ -23,16 +21,20 @@ export default function FileEditor(
                     padding: 12,
                     borderBottom: "1px solid #e5e5e5",
                     display: "flex",
-                    gap: 12,
                     alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 12,
                 }}
             >
-                <FileNameInput initialValue={fileName}/>
-                <span style={{opacity: 0.7, fontSize: 12}}>{fileName}</span>
+                <ModeToggle value={mode} onChange={setMode}/>
             </div>
 
             <div style={{flex: 1}}>
-                <FileContentEditor value={text} onChange={setText}/>
+                {mode === "edit" ? (
+                    <FileContentEditor value={value} onChange={onChange}/>
+                ) : (
+                    <MarkdownPreview value={value}/>
+                )}
             </div>
         </div>
     );

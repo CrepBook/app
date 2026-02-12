@@ -1,5 +1,6 @@
 import "./App.css";
-import FileEditor from "./widgets/file-editor/ui/FileEditor.tsx"
+import {useState} from "react";
+import {FileEditor} from "@/widgets/file-editor/ui/FileEditor";
 
 // import { invoke } from "@tauri-apps/api/core";
 
@@ -12,9 +13,11 @@ function App() {
     //     setGreetMsg(await invoke("greet", { name }));
     // }
 
+    const [text, setText] = useState<string>("# Hello\n\nWrite markdown here...");
+
     return (
         <main className="container">
-            <FileEditor />
+            <FileEditor value={text} onChange={setText}/>
         </main>
     );
 }
