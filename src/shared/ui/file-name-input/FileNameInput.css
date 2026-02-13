@@ -1,0 +1,23 @@
+.file-name-input {
+    width: 100%;
+    max-width: 520px;
+
+    background: transparent;
+    border: none;
+    outline: none;
+
+    padding: 4px 0;
+    font: inherit;
+    font-size: 16px;
+    font-weight: 600;
+
+    color: inherit;
+}
+
+.file-name-input:focus {
+    border-bottom: 1px solid rgba(127, 127, 127, 0.5);
+}
+
+.file-name-input::placeholder {
+    opacity: 0.5;
+}

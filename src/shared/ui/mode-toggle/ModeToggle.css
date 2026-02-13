@@ -1,0 +1,16 @@
+.mode-toggle {
+    display: inline-flex;
+    gap: 8px;
+}
+
+.mode-toggle__btn {
+    padding: 6px 10px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: transparent;
+    cursor: pointer;
+}
+
+.mode-toggle__btn--active {
+    background: rgba(127, 127, 127, 0.18);
+}

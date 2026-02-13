@@ -1,35 +1,33 @@
 import {useState} from "react";
-import FileContentEditor from "@/shared/ui/FileContentEditor"; // поправь путь
-import {MarkdownPreview} from "@/shared/ui/MarkdownPreview";
-import {ModeToggle} from "@/shared/ui/ModeToggle";
+import "./FileEditor.css";
+
+import FileContentEditor from "@/shared/ui/file-content-editor/FileContentEditor";
+import FileNameInput from "@/shared/ui/file-name-input/FileNameInput";
+import {MarkdownPreview} from "@/shared/ui/markdown-preview/MarkdownPreview";
+import {ModeToggle} from "@/shared/ui/mode-toggle/ModeToggle";
 
 type Mode = "edit" | "preview";
 
 type FileEditorProps = {
     value: string;
     onChange: (value: string) => void;
-    initialMode?: Mode;
 };
 
-export function FileEditor({value, onChange, initialMode = "edit"}: FileEditorProps) {
-    const [mode, setMode] = useState<Mode>(initialMode);
+export function FileEditor({value, onChange}: FileEditorProps) {
+    const [mode, setMode] = useState<Mode>("edit");
+    const [fileName, setFileName] = useState("note.md");
 
     return (
-        <div style={{height: "100dvh", display: "flex", flexDirection: "column"}}>
-            <div
-                style={{
-                    padding: 12,
-                    borderBottom: "1px solid #e5e5e5",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 12,
-                }}
-            >
+        <div className="file-editor">
+            <div className="file-editor__top">
+                <div className="file-editor__name">
+                    <FileNameInput value={fileName} onChange={setFileName}/>
+                </div>
+
                 <ModeToggle value={mode} onChange={setMode}/>
             </div>
 
-            <div style={{flex: 1}}>
+            <div className="file-editor__body">
                 {mode === "edit" ? (
                     <FileContentEditor value={value} onChange={onChange}/>
                 ) : (

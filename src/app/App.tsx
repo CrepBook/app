@@ -1,10 +1,13 @@
-import "./App.css";
+import "./styles/globals.css";
+import "./styles/layout.css";
+import "./styles/tokens.css";
+
 import {useState} from "react";
 import {FileEditor} from "@/widgets/file-editor/ui/FileEditor";
 
 // import { invoke } from "@tauri-apps/api/core";
 
-function App() {
+export default function App() {
     // const [greetMsg, setGreetMsg] = useState("");
     // const [name, setName] = useState("");
     //
@@ -12,14 +15,11 @@ function App() {
     //     // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
     //     setGreetMsg(await invoke("greet", { name }));
     // }
-
-    const [text, setText] = useState<string>("# Hello\n\nWrite markdown here...");
+    const [text, setText] = useState<string>("# Welcome\n\nStart writing...");
 
     return (
-        <main className="container">
+        <div className="app-container">
             <FileEditor value={text} onChange={setText}/>
-        </main>
+        </div>
     );
 }
-
-export default App;

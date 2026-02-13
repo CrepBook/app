@@ -1,0 +1,5 @@
+.md-preview {
+    height: 100%;
+    overflow: auto;
+    padding: var(--pad-2);
+}
