@@ -2,6 +2,7 @@ Project on tauri stack (rust + react(ts))
 
 File Stucture
 
+```
 └── app
     ├── .github
     │   └── ISSUE_TEMPLATE
@@ -59,3 +60,4 @@ File Stucture
     ├── tsconfig.json
     ├── tsconfig.node.json
     └── vite.config.ts
+```
