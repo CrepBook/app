@@ -15,7 +15,7 @@ type FileEditorProps = {
 
 export function FileEditor({value, onChange}: FileEditorProps) {
     const [mode, setMode] = useState<Mode>("edit");
-    const [fileName, setFileName] = useState("note.md");
+    const [fileName, setFileName] = useState("Untitled.md");
 
     return (
         <div className="file-editor">
