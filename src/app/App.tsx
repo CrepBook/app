@@ -15,7 +15,7 @@ export default function App() {
     //     // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
     //     setGreetMsg(await invoke("greet", { name }));
     // }
-    const [text, setText] = useState<string>("# Welcome\n\nStart writing...");
+    const [text, setText] = useState<string>("# Welcome\n## Cum Well\n\nStart writing...\n\nФормула: $E = mc^2$\n\n\n| Name | Score |\n|------|-------|\n| Ivan |  100  |\n| Max  |   95  |\n\n```py\nprint(1)\n```\n\n```cpp\nint main() {\n    return 1;\n}\n```\n");
 
     return (
         <div className="app-container">

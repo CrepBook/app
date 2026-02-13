@@ -3,3 +3,25 @@
     overflow: auto;
     padding: var(--pad-2);
 }
+
+.md-preview table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12px 0;
+}
+
+.md-preview th,
+.md-preview td {
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    padding: 8px 10px;
+    text-align: left;
+}
+
+.md-preview thead th {
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.md-preview tr:nth-child(even) td {
+    background: rgba(255, 255, 255, 0.03);
+}
