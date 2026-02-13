@@ -1,4 +1,4 @@
-import React, {useMemo, useRef} from "react";
+import React, {useMemo} from "react";
 import "./FileNameInput.css";
 
 const MAX_NAME_LENGTH = 127;
@@ -6,6 +6,7 @@ const MAX_NAME_LENGTH = 127;
 type FileNameInputProps = {
     value: string;
     onChange: (nextFullName: string) => void;
+    onCommit?: (nextFullName: string) => void;
 
     placeholder?: string;
     disabled?: boolean;
@@ -14,6 +15,9 @@ type FileNameInputProps = {
 
 function splitExt(name: string) {
     const lastDot = name.lastIndexOf(".");
+    if (lastDot <= 0) {
+        return {base: name, ext: ""};
+    }
     return {base: name.slice(0, lastDot), ext: name.slice(lastDot)};
 }
 
@@ -21,6 +25,7 @@ export default function FileNameInput(
     {
         value,
         onChange,
+        onCommit,
         placeholder = "untitled",
         disabled,
         className,
@@ -30,8 +35,6 @@ export default function FileNameInput(
     const isMd = ext.toLowerCase() === ".md";
 
     const displayValue = isMd ? base : value;
-
-    const prevSavedRef = useRef<string>(value);
 
     const clamp = (s: string) => s.slice(0, MAX_NAME_LENGTH);
 
@@ -51,8 +54,6 @@ export default function FileNameInput(
     };
 
     const handleBlur = () => {
-        const prev = prevSavedRef.current;
-
         let curr = value;
 
         if (isMd) {
@@ -63,11 +64,8 @@ export default function FileNameInput(
             curr = curr.trimEnd().slice(0, MAX_NAME_LENGTH);
         }
 
-        console.log("fileName prev:", prev, "curr:", curr);
-
         if (curr !== value) onChange(curr);
-
-        prevSavedRef.current = curr;
+        onCommit?.(curr);
     };
 
     return (
