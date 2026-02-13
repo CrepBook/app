@@ -11,17 +11,32 @@ type Mode = "edit" | "preview";
 type FileEditorProps = {
     value: string;
     onChange: (value: string) => void;
+    fileName: string;
+    onFileNameChange: (value: string) => void;
+    onFileNameCommit?: (value: string) => void;
+    fileNameDisabled?: boolean;
 };
 
-export function FileEditor({value, onChange}: FileEditorProps) {
+export function FileEditor({
+    value,
+    onChange,
+    fileName,
+    onFileNameChange,
+    onFileNameCommit,
+    fileNameDisabled = false,
+}: FileEditorProps) {
     const [mode, setMode] = useState<Mode>("edit");
-    const [fileName, setFileName] = useState("Untitled.md");
 
     return (
         <div className="file-editor">
             <div className="file-editor__top">
                 <div className="file-editor__name">
-                    <FileNameInput value={fileName} onChange={setFileName}/>
+                    <FileNameInput
+                        value={fileName}
+                        onChange={onFileNameChange}
+                        onCommit={onFileNameCommit}
+                        disabled={fileNameDisabled}
+                    />
                 </div>
 
                 <ModeToggle value={mode} onChange={setMode}/>

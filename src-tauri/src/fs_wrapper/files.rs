@@ -4,8 +4,8 @@ pub fn fs_file_exist(filename: &str) -> bool {
 }
 
 #[tauri::command]
-pub fn fs_read_file(filename: &str) -> String {
-    std::fs::read_to_string(filename).unwrap()
+pub fn fs_read_file(filename: &str) -> Result<String, String> {
+    std::fs::read_to_string(filename).map_err(|err| err.to_string())
 }
 
 #[tauri::command]
