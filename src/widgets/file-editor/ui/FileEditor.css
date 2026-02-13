@@ -1,0 +1,27 @@
+.file-editor {
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+}
+
+.file-editor__top {
+    padding: var(--pad-2);
+    border-bottom: 1px solid var(--border);
+    background: var(--panel-bg);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--pad-2);
+}
+
+.file-editor__name {
+    display: flex;
+    align-items: center;
+    gap: var(--pad-2);
+}
+
+.file-editor__body {
+    flex: 1;
+    min-height: 0;
+}
