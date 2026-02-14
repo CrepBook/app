@@ -1,8 +1,9 @@
-import "./FileContentEditor.css";
 import CodeMirror from "@uiw/react-codemirror";
-import {EditorView} from "@codemirror/view";
-import {markdown} from "@codemirror/lang-markdown";
-import {oneDark} from "@codemirror/theme-one-dark";
+import { markdown } from "@codemirror/lang-markdown";
+import { oneDark } from "@codemirror/theme-one-dark";
+import { EditorView } from "@codemirror/view";
+
+import "./FileContentEditor.css";
 
 type FileContentEditorProps = {
     value: string;
@@ -17,7 +18,7 @@ export default function FileContentEditor(
         onChange,
         placeholder = "Write markdown...",
         disabled,
-    }: FileContentEditorProps
+    }: FileContentEditorProps,
 ) {
     return (
         <div className="file-content-editor">
@@ -32,7 +33,6 @@ export default function FileContentEditor(
                     EditorView.lineWrapping,
                 ]}
                 onChange={(val) => onChange(val)}
-                onBlur={() => console.log("Editor content:", value)}
             />
         </div>
     );

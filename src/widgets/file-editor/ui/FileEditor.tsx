@@ -1,10 +1,11 @@
-import {useState} from "react";
-import "./FileEditor.css";
+import { useState } from "react";
 
 import FileContentEditor from "@/shared/ui/file-content-editor/FileContentEditor";
 import FileNameInput from "@/shared/ui/file-name-input/FileNameInput";
-import {MarkdownPreview} from "@/shared/ui/markdown-preview/MarkdownPreview";
-import {ModeToggle} from "@/shared/ui/mode-toggle/ModeToggle";
+import { MarkdownPreview } from "@/shared/ui/markdown-preview/MarkdownPreview";
+import { ModeToggle } from "@/shared/ui/mode-toggle/ModeToggle";
+
+import "./FileEditor.css";
 
 type Mode = "edit" | "preview";
 
@@ -42,14 +43,14 @@ export function FileEditor({
                     />
                 </div>
 
-                <ModeToggle value={mode} onChange={setMode}/>
+                <ModeToggle value={mode} onChange={setMode} />
             </div>
 
             <div className="file-editor__body">
                 {mode === "edit" ? (
-                    <FileContentEditor value={value} onChange={onChange}/>
+                    <FileContentEditor value={value} onChange={onChange} />
                 ) : (
-                    <MarkdownPreview value={value}/>
+                    <MarkdownPreview value={value} />
                 )}
             </div>
         </div>

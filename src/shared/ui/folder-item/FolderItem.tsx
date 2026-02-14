@@ -10,7 +10,7 @@ export type FolderItemProps = {
     onSelect?: (path: string) => void;
 
     disabled?: boolean;
-    depth?: number; // для дерева: отступ слева
+    depth?: number;
 };
 
 function folderName(path: string) {
@@ -26,7 +26,7 @@ export default function FolderItem(
         onSelect,
         disabled = false,
         depth = 0,
-    }: FolderItemProps
+    }: FolderItemProps,
 ) {
     const name = folderName(path);
 
@@ -35,7 +35,7 @@ export default function FolderItem(
             className={`folder-item ${selected ? "folder-item--selected" : ""} ${
                 disabled ? "folder-item--disabled" : ""
             }`}
-            style={{paddingLeft: 10 + depth * 14}}
+            style={{ paddingLeft: 10 + depth * 14 }}
             title={path}
         >
             <button
@@ -54,9 +54,9 @@ export default function FolderItem(
                 onClick={() => onSelect?.(path)}
                 disabled={disabled}
             >
-        <span className="folder-item__icon" aria-hidden="true">
-          {isOpen ? "📂" : "📁"}
-        </span>
+                <span className="folder-item__icon" aria-hidden="true">
+                    {isOpen ? "📂" : "📁"}
+                </span>
                 <span className="folder-item__name">{name}</span>
             </button>
         </div>

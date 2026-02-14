@@ -1,7 +1,7 @@
 import "./FileItem.css";
 
 export type FileItemProps = {
-    path: string;                 // полный путь
+    path: string;
     selected?: boolean;
     disabled?: boolean;
     onClick?: (path: string) => void;
@@ -25,7 +25,7 @@ export default function FileItem(
         disabled = false,
         onClick,
         onDoubleClick,
-    }: FileItemProps
+    }: FileItemProps,
 ) {
     const name = prettyName(path);
 
@@ -38,7 +38,9 @@ export default function FileItem(
             onDoubleClick={() => onDoubleClick?.(path)}
             title={path}
         >
-            <span className="file-item__icon" aria-hidden="true">📄</span>
+            <span className="file-item__icon" aria-hidden="true">
+                📄
+            </span>
             <span className="file-item__name">{name}</span>
         </button>
     );
