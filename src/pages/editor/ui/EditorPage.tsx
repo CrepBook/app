@@ -6,8 +6,6 @@ import { VaultExplorer } from "@/widgets/vault-explorer/VaultExplorer";
 
 const DEFAULT_TEXT = "# Welcome\n\nOpen a file from vault...\n";
 const DEFAULT_FILE_NAME = "Untitled.md";
-const DEFAULT_ROOT_PATH = "/Users/yeezy-na-izi/crep-book/test-vault";
-const AUTOSAVE_MS = 10_000;
 
 function extractFileName(path: string) {
     return path.split(/[\\/]/).filter(Boolean).pop() ?? path;
@@ -32,6 +30,8 @@ export function EditorPage() {
     const [currentFilePath, setCurrentFilePath] = useState<string | null>(null);
     const [fileNameFocusToken, setFileNameFocusToken] = useState<number>(0);
     const [explorerRefreshToken, setExplorerRefreshToken] = useState<number>(0);
+    const [defaultRootPath, setDefaultRootPath] = useState<string>("");
+    const [autosaveMs, setAutosaveMs] = useState<number>(10_000);
 
     const currentFilePathRef = useRef<string | null>(null);
     const textRef = useRef<string>(text);
@@ -39,6 +39,26 @@ export function EditorPage() {
     const isSavingRef = useRef<boolean>(false);
     const deletedPathsRef = useRef<Set<string>>(new Set());
     const openRequestIdRef = useRef<number>(0);
+
+    useEffect(() => {
+        async function loadSettings() {
+            try {
+                const rootPath = await invoke<string>("settings_get_default_root_path");
+                setDefaultRootPath(rootPath);
+            } catch (err) {
+                console.error("Failed to load default root path", err);
+            }
+
+            try {
+                const autosaveInterval = await invoke<number>("settings_get_autosave_ms");
+                setAutosaveMs(autosaveInterval);
+            } catch (err) {
+                console.error("Failed to load autosave interval", err);
+            }
+        }
+
+        void loadSettings();
+    }, []);
 
     useEffect(() => {
         textRef.current = text;
@@ -177,7 +197,7 @@ export function EditorPage() {
     useEffect(() => {
         const timer = setInterval(() => {
             void saveCurrentFile();
-        }, AUTOSAVE_MS);
+        }, autosaveMs);
 
         return () => clearInterval(timer);
     }, [saveCurrentFile]);
@@ -186,7 +206,7 @@ export function EditorPage() {
         <div className="app-shell">
             <aside className="app-shell__sidebar">
                 <VaultExplorer
-                    rootPath={DEFAULT_ROOT_PATH}
+                    rootPath={defaultRootPath}
                     onOpenFile={handleOpenFile}
                     onDeleteFile={handleDeleteFile}
                     onCreateFile={handleCreateFile}

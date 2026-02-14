@@ -27,7 +27,10 @@ fn next_available_dir_path(path: &Path) -> String {
     }
 
     let parent = path.parent().map(Path::to_path_buf).unwrap_or_default();
-    let name = path.file_name().and_then(|s| s.to_str()).unwrap_or("Untitled");
+    let name = path
+        .file_name()
+        .and_then(|s| s.to_str())
+        .unwrap_or("Untitled");
     let (base, suffix) = split_name_number(name);
 
     let mut n: u32 = if suffix > 0 { suffix + 1 } else { 1 };
