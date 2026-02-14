@@ -15,6 +15,7 @@ type FileEditorProps = {
     onFileNameChange: (value: string) => void;
     onFileNameCommit?: (value: string) => void;
     fileNameDisabled?: boolean;
+    fileNameFocusToken?: number;
 };
 
 export function FileEditor({
@@ -24,6 +25,7 @@ export function FileEditor({
     onFileNameChange,
     onFileNameCommit,
     fileNameDisabled = false,
+    fileNameFocusToken = 0,
 }: FileEditorProps) {
     const [mode, setMode] = useState<Mode>("edit");
 
@@ -36,6 +38,7 @@ export function FileEditor({
                         onChange={onFileNameChange}
                         onCommit={onFileNameCommit}
                         disabled={fileNameDisabled}
+                        focusToken={fileNameFocusToken}
                     />
                 </div>
 

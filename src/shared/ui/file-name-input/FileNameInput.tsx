@@ -1,4 +1,4 @@
-import React, {useMemo} from "react";
+import React, {useEffect, useMemo, useRef} from "react";
 import "./FileNameInput.css";
 
 const MAX_NAME_LENGTH = 127;
@@ -11,14 +11,21 @@ type FileNameInputProps = {
     placeholder?: string;
     disabled?: boolean;
     className?: string;
+    focusToken?: number;
 };
 
 function splitExt(name: string) {
-    const lastDot = name.lastIndexOf(".");
-    if (lastDot <= 0) {
-        return {base: name, ext: ""};
+    const trimmed = name.trimEnd();
+    const mdMatch = trimmed.match(/^(.*)\.md$/i);
+    if (mdMatch) {
+        return {base: mdMatch[1], ext: ".md"};
     }
-    return {base: name.slice(0, lastDot), ext: name.slice(lastDot)};
+
+    const lastDot = trimmed.lastIndexOf(".");
+    if (lastDot <= 0) {
+        return {base: trimmed, ext: ""};
+    }
+    return {base: trimmed.slice(0, lastDot), ext: trimmed.slice(lastDot)};
 }
 
 export default function FileNameInput(
@@ -29,8 +36,10 @@ export default function FileNameInput(
         placeholder = "untitled",
         disabled,
         className,
+        focusToken = 0,
     }: FileNameInputProps
 ) {
+    const inputRef = useRef<HTMLInputElement>(null);
     const {base, ext} = useMemo(() => splitExt(value), [value]);
     const isMd = ext.toLowerCase() === ".md";
 
@@ -42,11 +51,8 @@ export default function FileNameInput(
         const raw = clamp(e.target.value);
 
         if (isMd) {
-            if (raw.includes(".")) {
-                onChange(raw);
-            } else {
-                onChange(`${raw}.md`);
-            }
+            const nextBase = raw.replace(/\.md$/i, "");
+            onChange(`${nextBase}.md`);
             return;
         }
 
@@ -68,8 +74,22 @@ export default function FileNameInput(
         onCommit?.(curr);
     };
 
+    useEffect(() => {
+        if (disabled) {
+            return;
+        }
+
+        if (!inputRef.current) {
+            return;
+        }
+
+        inputRef.current.focus();
+        inputRef.current.select();
+    }, [disabled, focusToken]);
+
     return (
         <input
+            ref={inputRef}
             className={`file-name-input ${className ?? ""}`}
             value={displayValue}
             onChange={handleChange}
