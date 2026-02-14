@@ -1,157 +1,226 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 
-import FileItem from "@/shared/ui/file-item/FileItem";
-import FolderItem from "@/shared/ui/folder-item/FolderItem";
+import { handleDeleteFile as handleDeleteFileHelper, handleDeleteFolder as handleDeleteFolderHelper } from "@/widgets/vault-explorer/lib/deleteHandlers";
+import { requestDeleteFile as requestDeleteFileHelper, requestDeleteFolder as requestDeleteFolderHelper } from "@/widgets/vault-explorer/lib/deleteRequests";
+import { openFileContextMenu as showFileContextMenu, openFolderContextMenu as showFolderContextMenu } from "@/widgets/vault-explorer/lib/openContextMenus";
+import { submitCreateEntry as submitCreateEntryHelper, submitRenameFolder as submitRenameFolderHelper } from "@/widgets/vault-explorer/lib/submitHandlers";
+import { entryName, joinPath, parentDir } from "@/widgets/vault-explorer/lib/pathUtils";
+import { useVaultTreeState } from "@/widgets/vault-explorer/model/useVaultTreeState";
+import {
+    CreateEntryKind,
+    CreateEntryModal as CreateEntryModalState,
+    DeleteModal,
+    RenameFolderModal as RenameFolderModalState,
+    VaultExplorerProps,
+} from "@/widgets/vault-explorer/model/types";
+import { CreateEntryModal } from "@/widgets/vault-explorer/ui/CreateEntryModal";
+import { DeleteConfirmModal } from "@/widgets/vault-explorer/ui/DeleteConfirmModal";
+import { RenameFolderModal } from "@/widgets/vault-explorer/ui/RenameFolderModal";
+import { VaultTree } from "@/widgets/vault-explorer/ui/VaultTree";
 import "./VaultExplorer.css";
 
-type DirContent = {
-    dirs: string[];
-    files: string[];
-};
+export function VaultExplorer({
+    rootPath,
+    onOpenFile,
+    onDeleteFile,
+    onCreateFile,
+    refreshToken = 0,
+}: VaultExplorerProps) {
+    const [createEntryModal, setCreateEntryModal] = useState<CreateEntryModalState>(null);
+    const [renameFolderModal, setRenameFolderModal] = useState<RenameFolderModalState>(null);
+    const [deleteModal, setDeleteModal] = useState<DeleteModal>(null);
+    const createEntryInputRef = useRef<HTMLInputElement>(null);
+    const wasModalOpenRef = useRef<boolean>(false);
 
-type VaultExplorerProps = {
-    rootPath: string;
-    onOpenFile?: (path: string) => void;
-};
-
-export function VaultExplorer({ rootPath, onOpenFile }: VaultExplorerProps) {
-    const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({
-        [rootPath]: true,
-    });
-    const [selectedPath, setSelectedPath] = useState<string>("");
-    const [contentByFolder, setContentByFolder] = useState<Record<string, DirContent>>({});
-    const [loadingFolder, setLoadingFolder] = useState<Record<string, boolean>>({});
-    const [error, setError] = useState<string | null>(null);
-    const contentRef = useRef(contentByFolder);
-    const loadingRef = useRef(loadingFolder);
+    const {
+        openFolders,
+        setOpenFolders,
+        selectedPath,
+        setSelectedPath,
+        contentByFolder,
+        setContentByFolder,
+        loadingFolder,
+        setLoadingFolder,
+        error,
+        setError,
+        loadFolder,
+        toggleFolder,
+        refreshRoot,
+    } = useVaultTreeState({ rootPath, refreshToken });
 
     useEffect(() => {
-        contentRef.current = contentByFolder;
-    }, [contentByFolder]);
+        const isOpen = Boolean(createEntryModal || renameFolderModal);
+        const justOpened = isOpen && !wasModalOpenRef.current;
+        wasModalOpenRef.current = isOpen;
 
-    useEffect(() => {
-        loadingRef.current = loadingFolder;
-    }, [loadingFolder]);
-
-    const loadFolder = useCallback(async (path: string, force = false) => {
-        const isLoading = Boolean(loadingRef.current[path]);
-        const isLoaded = Boolean(contentRef.current[path]);
-
-        if (isLoading || (isLoaded && !force)) {
+        if (!justOpened || !createEntryInputRef.current) {
             return;
         }
 
-        setError(null);
-        setLoadingFolder((prev) => ({ ...prev, [path]: true }));
+        createEntryInputRef.current.focus();
+        createEntryInputRef.current.select();
+    }, [createEntryModal, renameFolderModal]);
 
+    const handleCreateNote = useCallback(async (targetFolder: string) => {
         try {
-            const res = await invoke<DirContent>("fs_get_dir_content", { path });
+            const desiredFilePath = joinPath(targetFolder, "Untitled.md");
+            const filePath = await invoke<string>("fs_next_available_file_path", {
+                filename: desiredFilePath,
+            });
+            const nextFileName = entryName(filePath);
 
-            const dirs = [...(res.dirs ?? [])].sort((a, b) =>
-                a.localeCompare(b, undefined, { sensitivity: "base" })
-            );
-            const files = [...(res.files ?? [])].sort((a, b) =>
-                a.localeCompare(b, undefined, { sensitivity: "base" })
-            );
+            const created = await invoke<boolean>("fs_create_file", { filename: filePath });
+            if (!created) {
+                setError(`Cannot create file: ${nextFileName}`);
+                return;
+            }
 
-            setContentByFolder((prev) => ({
-                ...prev,
-                [path]: { dirs, files },
-            }));
+            setError(null);
+            setOpenFolders((prev) => ({ ...prev, [targetFolder]: true }));
+            await loadFolder(targetFolder, true);
+            setSelectedPath(filePath);
+            await onOpenFile?.(filePath);
+            await onCreateFile?.(filePath);
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : String(err);
             setError(message);
-        } finally {
-            setLoadingFolder((prev) => ({ ...prev, [path]: false }));
         }
+    }, [loadFolder, onCreateFile, onOpenFile]);
+
+    const openCreateEntryModal = useCallback((kind: CreateEntryKind, folderPath: string) => {
+        setCreateEntryModal({
+            kind,
+            folderPath,
+            value: kind === "file" ? "Untitled1.txt" : "Untitled1",
+        });
     }, []);
 
-    const toggleFolder = useCallback(async (path: string) => {
-        let willOpen = false;
-        setOpenFolders((prev) => {
-            willOpen = !prev[path];
-            return { ...prev, [path]: willOpen };
+    const submitCreateEntry = useCallback(async () => {
+        await submitCreateEntryHelper({
+            createEntryModal,
+            onOpenFile,
+            onCreateFile,
+            loadFolder,
+            setError,
+            setCreateEntryModal,
+            setOpenFolders,
+            setSelectedPath,
         });
+    }, [createEntryModal, loadFolder, onCreateFile, onOpenFile]);
 
-        if (willOpen) {
-            await loadFolder(path);
+    const submitRenameFolder = useCallback(async () => {
+        await submitRenameFolderHelper({
+            renameFolderModal,
+            rootPath,
+            loadFolder,
+            setError,
+            setRenameFolderModal,
+            setOpenFolders,
+            setContentByFolder,
+            setLoadingFolder,
+            setSelectedPath,
+        });
+    }, [loadFolder, renameFolderModal, rootPath]);
+
+    const handleDeleteFile = useCallback(async (filePath: string) => {
+        try {
+            await handleDeleteFileHelper({
+                filePath,
+                onDeleteFile,
+                loadFolder,
+                setError,
+                setSelectedPath,
+            });
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : String(err);
+            setError(message);
         }
-    }, [loadFolder]);
+    }, [loadFolder, onDeleteFile]);
 
-    useEffect(() => {
-        setOpenFolders({ [rootPath]: true });
-        setSelectedPath("");
-        setContentByFolder({});
-        setLoadingFolder({});
-        setError(null);
+    const handleDeleteFolder = useCallback(async (folderPath: string) => {
+        try {
+            await handleDeleteFolderHelper({
+                folderPath,
+                rootPath,
+                loadFolder,
+                setError,
+                setOpenFolders,
+                setContentByFolder,
+                setLoadingFolder,
+                setSelectedPath,
+            });
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : String(err);
+            setError(message);
+        }
+    }, [loadFolder, rootPath]);
 
-        void loadFolder(rootPath, true);
-    }, [rootPath, loadFolder]);
+    const requestDeleteFolder = useCallback(async (folderPath: string) => {
+        await requestDeleteFolderHelper({
+            folderPath,
+            onDeleteEmptyFolder: handleDeleteFolder,
+            onNeedConfirm: (path) => setDeleteModal({ kind: "folder", path }),
+            onError: setError,
+        });
+    }, [handleDeleteFolder]);
 
-    const treeItems = useMemo(() => {
-        const out: React.ReactNode[] = [];
+    const requestDeleteFile = useCallback(async (filePath: string) => {
+        await requestDeleteFileHelper({
+            filePath,
+            onDeleteEmptyFile: handleDeleteFile,
+            onNeedConfirm: (path) => setDeleteModal({ kind: "file", path }),
+            onError: setError,
+        });
+    }, [handleDeleteFile]);
 
-        const walk = (folderPath: string, depth: number) => {
-            const isOpen = Boolean(openFolders[folderPath]);
-            const isLoading = Boolean(loadingFolder[folderPath]);
-            const content = contentByFolder[folderPath];
+    const submitDelete = useCallback(async () => {
+        if (!deleteModal) {
+            return;
+        }
 
-            out.push(
-                <FolderItem
-                    key={folderPath}
-                    path={folderPath}
-                    isOpen={isOpen}
-                    onToggle={toggleFolder}
-                    selected={selectedPath === folderPath}
-                    onSelect={setSelectedPath}
-                    depth={depth}
-                />
-            );
+        const { kind, path } = deleteModal;
+        setDeleteModal(null);
 
-            if (!isOpen) {
-                return;
-            }
+        if (kind === "file") {
+            await handleDeleteFile(path);
+            return;
+        }
 
-            if (isLoading && !content) {
-                out.push(
-                    <div
-                        key={`${folderPath}:loading`}
-                        className="vault-explorer__loading"
-                        style={{ paddingLeft: 10 + (depth + 1) * 14 }}
-                    >
-                        Loading...
-                    </div>
-                );
-                return;
-            }
+        await handleDeleteFolder(path);
+    }, [deleteModal, handleDeleteFile, handleDeleteFolder]);
 
-            if (!content) {
-                return;
-            }
+    const openFolderContextMenu = useCallback(async (event: React.MouseEvent, folderPath: string) => {
+        await showFolderContextMenu({
+            event,
+            folderPath,
+            rootPath,
+            onCreateNote: handleCreateNote,
+            onCreateFolder: (path) => openCreateEntryModal("folder", path),
+            onCreateFile: (path) => openCreateEntryModal("file", path),
+            onRenameFolder: (path) => {
+                setRenameFolderModal({
+                    folderPath: path,
+                    parentPath: parentDir(path),
+                    value: entryName(path),
+                });
+            },
+            onDeleteFolder: requestDeleteFolder,
+        });
+    }, [handleCreateNote, openCreateEntryModal, requestDeleteFolder, rootPath]);
 
-            for (const dir of content.dirs) {
-                walk(dir, depth + 1);
-            }
-
-            for (const file of content.files) {
-                out.push(
-                    <div key={file} style={{ paddingLeft: 10 + (depth + 1) * 14 }}>
-                        <FileItem
-                            path={file}
-                            selected={selectedPath === file}
-                            onClick={setSelectedPath}
-                            onDoubleClick={(path) => onOpenFile?.(path)}
-                        />
-                    </div>
-                );
-            }
-        };
-
-        walk(rootPath, 0);
-
-        return out;
-    }, [contentByFolder, loadingFolder, onOpenFile, openFolders, rootPath, selectedPath, toggleFolder]);
+    const openFileContextMenu = useCallback(async (event: React.MouseEvent, filePath: string) => {
+        await showFileContextMenu({
+            event,
+            filePath,
+            rootPath,
+            resolveParentFolder: parentDir,
+            onCreateNote: handleCreateNote,
+            onCreateFolder: (path) => openCreateEntryModal("folder", path),
+            onCreateFile: (path) => openCreateEntryModal("file", path),
+            onDeleteFile: requestDeleteFile,
+        });
+    }, [handleCreateNote, openCreateEntryModal, requestDeleteFile, rootPath]);
 
     return (
         <div className="vault-explorer">
@@ -161,9 +230,7 @@ export function VaultExplorer({ rootPath, onOpenFile }: VaultExplorerProps) {
                     className="vault-explorer__btn"
                     type="button"
                     onClick={() => {
-                        setContentByFolder({});
-                        setLoadingFolder({});
-                        void loadFolder(rootPath, true);
+                        void refreshRoot();
                     }}
                 >
                     Refresh
@@ -172,7 +239,42 @@ export function VaultExplorer({ rootPath, onOpenFile }: VaultExplorerProps) {
 
             {error ? <div className="vault-explorer__error">{error}</div> : null}
 
-            <div className="vault-explorer__tree">{treeItems}</div>
+            <div className="vault-explorer__tree" onContextMenu={(event) => openFolderContextMenu(event, rootPath)}>
+                <VaultTree
+                    rootPath={rootPath}
+                    openFolders={openFolders}
+                    loadingFolder={loadingFolder}
+                    contentByFolder={contentByFolder}
+                    selectedPath={selectedPath}
+                    onToggleFolder={toggleFolder}
+                    onSelectPath={setSelectedPath}
+                    onOpenFile={onOpenFile}
+                    onFolderContextMenu={openFolderContextMenu}
+                    onFileContextMenu={openFileContextMenu}
+                />
+            </div>
+
+            <CreateEntryModal
+                modal={createEntryModal}
+                inputRef={createEntryInputRef}
+                onChange={(value) => setCreateEntryModal((prev) => (prev ? { ...prev, value } : prev))}
+                onCancel={() => setCreateEntryModal(null)}
+                onSubmit={() => void submitCreateEntry()}
+            />
+
+            <RenameFolderModal
+                modal={renameFolderModal}
+                inputRef={createEntryInputRef}
+                onChange={(value) => setRenameFolderModal((prev) => (prev ? { ...prev, value } : prev))}
+                onCancel={() => setRenameFolderModal(null)}
+                onSubmit={() => void submitRenameFolder()}
+            />
+
+            <DeleteConfirmModal
+                modal={deleteModal}
+                onCancel={() => setDeleteModal(null)}
+                onSubmit={() => void submitDelete()}
+            />
         </div>
     );
 }

@@ -16,10 +16,14 @@ pub fn run() {
             fs_write_file,
             fs_create_file,
             fs_delete_file,
+            fs_is_file_empty,
+            fs_next_available_file_path,
             fs_rename_file,
             fs_get_dir_content,
             fs_create_dir,
             fs_delete_dir,
+            fs_is_dir_empty,
+            fs_next_available_dir_path,
             fs_rename_dir
         ])
         .run(tauri::generate_context!())
