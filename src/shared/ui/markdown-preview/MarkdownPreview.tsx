@@ -9,7 +9,7 @@ import "./MarkdownPreview.css";
 
 type MarkdownPreviewProps = { value: string };
 
-export function MarkdownPreview({value}: MarkdownPreviewProps) {
+export function MarkdownPreview({ value }: MarkdownPreviewProps) {
     return (
         <div className="md-preview">
             <ReactMarkdown
@@ -21,4 +21,3 @@ export function MarkdownPreview({value}: MarkdownPreviewProps) {
         </div>
     );
 }
-

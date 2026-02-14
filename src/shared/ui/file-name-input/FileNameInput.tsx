@@ -1,4 +1,5 @@
-import React, {useEffect, useMemo, useRef} from "react";
+import React, { useEffect, useMemo, useRef } from "react";
+
 import "./FileNameInput.css";
 
 const MAX_NAME_LENGTH = 127;
@@ -18,14 +19,14 @@ function splitExt(name: string) {
     const trimmed = name.trimEnd();
     const mdMatch = trimmed.match(/^(.*)\.md$/i);
     if (mdMatch) {
-        return {base: mdMatch[1], ext: ".md"};
+        return { base: mdMatch[1], ext: ".md" };
     }
 
     const lastDot = trimmed.lastIndexOf(".");
     if (lastDot <= 0) {
-        return {base: trimmed, ext: ""};
+        return { base: trimmed, ext: "" };
     }
-    return {base: trimmed.slice(0, lastDot), ext: trimmed.slice(lastDot)};
+    return { base: trimmed.slice(0, lastDot), ext: trimmed.slice(lastDot) };
 }
 
 export default function FileNameInput(
@@ -37,10 +38,10 @@ export default function FileNameInput(
         disabled,
         className,
         focusToken = 0,
-    }: FileNameInputProps
+    }: FileNameInputProps,
 ) {
     const inputRef = useRef<HTMLInputElement>(null);
-    const {base, ext} = useMemo(() => splitExt(value), [value]);
+    const { base, ext } = useMemo(() => splitExt(value), [value]);
     const isMd = ext.toLowerCase() === ".md";
 
     const displayValue = isMd ? base : value;
@@ -63,7 +64,7 @@ export default function FileNameInput(
         let curr = value;
 
         if (isMd) {
-            const {base: currBase} = splitExt(curr);
+            const { base: currBase } = splitExt(curr);
             const fixedBase = currBase.trimEnd().slice(0, MAX_NAME_LENGTH);
             curr = `${fixedBase}.md`;
         } else {
