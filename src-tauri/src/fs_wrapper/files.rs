@@ -26,10 +26,7 @@ fn next_available_path(path: &Path) -> PathBuf {
     }
 
     let parent = path.parent().map(Path::to_path_buf).unwrap_or_default();
-    let stem = path
-        .file_stem()
-        .and_then(|s| s.to_str())
-        .unwrap_or("file");
+    let stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or("file");
     let ext = path.extension().and_then(|s| s.to_str()).unwrap_or("");
     let (base, suffix) = split_stem_number(stem);
 
@@ -82,7 +79,9 @@ pub fn fs_is_file_empty(filename: &str) -> Result<bool, String> {
 #[tauri::command]
 pub fn fs_next_available_file_path(filename: &str) -> String {
     let desired_path = Path::new(filename);
-    next_available_path(desired_path).to_string_lossy().into_owned()
+    next_available_path(desired_path)
+        .to_string_lossy()
+        .into_owned()
 }
 
 #[tauri::command]
@@ -95,8 +94,7 @@ pub fn fs_rename_file(old_filename: &str, new_filename: &str) -> Result<String, 
     }
 
     let target_path = next_available_path(desired_path);
-    std::fs::rename(old_path, &target_path)
-        .map_err(|err| err.to_string())?;
+    std::fs::rename(old_path, &target_path).map_err(|err| err.to_string())?;
 
     Ok(target_path.to_string_lossy().into_owned())
 }
