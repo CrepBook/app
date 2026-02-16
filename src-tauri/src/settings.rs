@@ -43,10 +43,10 @@ impl AppSettings {
     pub fn load(app_handle: &tauri::AppHandle) -> Self {
         let path = Self::settings_path(app_handle);
 
-        if let Ok(content) = fs::read_to_string(&path) {
-            if let Ok(settings) = serde_json::from_str::<AppSettings>(&content) {
-                return settings;
-            }
+        if let Ok(content) = fs::read_to_string(&path)
+            && let Ok(settings) = serde_json::from_str::<AppSettings>(&content)
+        {
+            return settings;
         }
 
         let default = AppSettings::default();
@@ -139,4 +139,68 @@ pub fn settings_reset_to_defaults(app_handle: tauri::AppHandle) -> Result<(), St
         fs::remove_file(&settings_path).map_err(|e| e.to_string())?;
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_app_settings_default() {
+        let settings = AppSettings::default();
+        assert_eq!(settings.default_root_path, "");
+        assert_eq!(settings.autosave_ms, 10_000);
+    }
+
+    #[test]
+    fn test_app_settings_serialize() {
+        let settings = AppSettings {
+            default_root_path: "/test/path".to_string(),
+            autosave_ms: 5000,
+        };
+
+        let json = serde_json::to_string(&settings).unwrap();
+        assert!(json.contains("/test/path"));
+        assert!(json.contains("5000"));
+    }
+
+    #[test]
+    fn test_app_settings_deserialize() {
+        let json = r#"{"default_root_path": "/my/path", "autosave_ms": 3000}"#;
+        let settings: AppSettings = serde_json::from_str(json).unwrap();
+
+        assert_eq!(settings.default_root_path, "/my/path");
+        assert_eq!(settings.autosave_ms, 3000);
+    }
+
+    #[test]
+    fn test_app_settings_deserialize_defaults() {
+        let json = r#"{}"#;
+        let settings: AppSettings = serde_json::from_str(json).unwrap();
+
+        assert_eq!(settings.default_root_path, "");
+        assert_eq!(settings.autosave_ms, 10_000);
+    }
+
+    #[test]
+    fn test_app_settings_clone() {
+        let settings = AppSettings {
+            default_root_path: "/path".to_string(),
+            autosave_ms: 15000,
+        };
+        let cloned = settings.clone();
+
+        assert_eq!(cloned.default_root_path, settings.default_root_path);
+        assert_eq!(cloned.autosave_ms, settings.autosave_ms);
+    }
+
+    #[test]
+    fn test_app_settings_debug() {
+        let settings = AppSettings::default();
+        let debug_str = format!("{:?}", settings);
+
+        assert!(debug_str.contains("AppSettings"));
+        assert!(debug_str.contains("default_root_path"));
+        assert!(debug_str.contains("autosave_ms"));
+    }
 }

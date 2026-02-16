@@ -15,7 +15,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
-            app.manage(SettingsState::new(&app.handle()));
+            app.manage(SettingsState::new(app.handle()));
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
